@@ -1,9 +1,9 @@
 //Constants 
-let initialData = {
+const initialData = {
     loggedIn : false
 };
 
-let LOGIN = "LOGIN";
+const LOGIN = "LOGIN";
 
 //Reducer
 export default function reducer(state = initialData, action){
