@@ -1,7 +1,8 @@
-import React from 'react'
-import styles from './card.module.css'
-import FontAwesome from 'react-fontawesome'
-import PropTypes from 'prop-types'
+import React from 'react';
+import styles from './card.module.css';
+import FontAwesome from 'react-fontawesome';
+import PropTypes from 'prop-types';
+
 
 let rick = "https://rickandmortyapi.com/api/character/avatar/1.jpeg"
 
@@ -10,7 +11,7 @@ function onClick(side) {
 }
 
 export default function Card({
-    name, image, rightClick, leftClick
+    name, image, rightClick, leftClick, hide
 }) {
     return (
         <div className={styles.container}>
@@ -19,6 +20,7 @@ export default function Card({
                 <p className={styles.name}>
                     {name}
                 </p>
+                {!hide &&
                 <div className={styles.actions}>
                     <div
                         onClick={leftClick || onClick("left")}
@@ -36,7 +38,7 @@ export default function Card({
                             size="2x"
                         />
                     </div>
-                </div>
+                </div>}
             </div>
         </div>
     )

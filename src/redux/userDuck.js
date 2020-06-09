@@ -1,4 +1,5 @@
 import { loginWithGoogle, signOutGoogle } from '../firebase';
+import { retriveFavoritesAction } from './charsDuck';
 
 //Constants 
 const initialData = {
@@ -60,7 +61,7 @@ export const restoreSessionAction = () => dispatch => {
 
 
 
-export const doGoogleLoginAction = () => (dispatch,getState) => {
+export const doGoogleLoginAction = () => (dispatch, getState) => {
     
     dispatch({
         type: LOGIN
@@ -78,7 +79,11 @@ export const doGoogleLoginAction = () => (dispatch,getState) => {
                     }
                 });
 
+                //GUARDAMOS LOS DATOS EN EL LOCALSTORAGE
                 saveStorage(getState());
+
+                //LLAMAMOS LOS FAVORITOS
+                retriveFavoritesAction()(dispatch, getState);
            })
            .catch(e => {
                console.log(e);
