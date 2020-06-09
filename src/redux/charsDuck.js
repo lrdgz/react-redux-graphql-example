@@ -1,16 +1,22 @@
 import axios from 'axios';
 import { updateDB, getFavs } from '../firebase';
-
+import ApolloClient ,{ gql } from 'apollo-boost';
 
 //Constants 
 const initialData = {
     fetching: false,
     array: [],
     current: {},
-    favorites: []
+    favorites: [],
+    nextPage: 1
 };
 
 const URL = "https://rickandmortyapi.com/api/character";
+const remoteGraphQL = "https://rickandmortyapi.com/graphql";
+
+const client = new ApolloClient({
+    uri: remoteGraphQL
+});
 
 //Esto solo lo utilizaremos para comunicaciones con el backend
 
@@ -18,6 +24,8 @@ const URL = "https://rickandmortyapi.com/api/character";
 const GET_CHARACTERS = "GET_CHARACTERS";
 const GET_CHARACTERS_SUCCESS = "GET_CHARACTERS_SUCCESS";
 const GET_CHARACTERS_ERROR = "GET_CHARACTERS_ERROR";
+
+const UPDATE_PAGE = "UPDATE_PAGE";
 
 //LOS CARACTERES FAVORITOS DESDE FIREBASE
 const GET_FAVS = "GET_FAVS";
@@ -38,6 +46,9 @@ export default function reducer(state = initialData, action){
         case REMOVE_CHARACTERS:
             return {...state, array: action.payload}
 
+        //ACTUALIZAR LA PAGINA CUANDO SE ACABEN LOS RESULTADOS
+        case UPDATE_PAGE:
+            return {...state, nextPage: action.payload}
 
         //CARGAR FAVORITOS DESDE FIREBASE
         case GET_FAVS:
@@ -66,31 +77,81 @@ export default function reducer(state = initialData, action){
 
 export const getCharactersAction = () => (dispatch,getState) => {
 
+    let query = gql`
+        query ($page: Int) {
+            characters(page:$page){
+                info{
+                    pages
+                    next
+                    prev
+                }
+                results{
+                    name
+                    image
+                }
+            }
+        }
+    `;
+
     //Ponemos el estado como cargando
     dispatch({
         type: GET_CHARACTERS
     });
 
-    return axios.get(URL)
-            .then(res => {
-                dispatch({
-                    type: GET_CHARACTERS_SUCCESS,
-                    payload: res.data.results
-                });
-            })
-            .catch(error => {
-                console.log(error);
-                dispatch({
-                    type: GET_CHARACTERS_ERROR,
-                    payload: error.response.message
-                });
-            });
+    let {nextPage} = getState().characters;
+
+    return client.query({
+        query,
+        variables: {page: nextPage}
+    })
+    .then(({data, error}) => {
+        if(error) {
+            dispatch({
+                type: GET_CHARACTERS_ERROR,
+                payload: error
+            }); 
+            return;
+        }
+
+        dispatch({
+            type: GET_CHARACTERS_SUCCESS,
+            payload: data.characters.results
+        });
+
+        dispatch({
+            type: UPDATE_PAGE,
+            payload: data.characters.info.next ? data.characters.info.next : 1
+        });
+    })
+    .catch(error => {
+        console.log(error);
+    });
+
+    // return axios.get(URL)
+    //         .then(res => {
+    //             dispatch({
+    //                 type: GET_CHARACTERS_SUCCESS,
+    //                 payload: res.data.results
+    //             });
+    //         })
+    //         .catch(error => {
+    //             console.log(error);
+    //             dispatch({
+    //                 type: GET_CHARACTERS_ERROR,
+    //                 payload: error.response.message
+    //             });
+    //         });
 };
 
 
 export const removeCharactersAction = () => (dispatch, getState) => {
     const {array} = getState().characters;
     array.shift();
+
+    if(!array.length){
+        getCharactersAction()(dispatch, getState);
+        return;
+    }
 
     dispatch({
         type: REMOVE_CHARACTERS,

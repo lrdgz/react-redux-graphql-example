@@ -4,7 +4,9 @@ import { gql } from 'apollo-boost';
 import { useQuery } from 'react-apollo';
 
 
-export default function GraphHome(){
+const GraphHome = () => {
+
+    let [chars, setChars] = useState([]);
 
     let query = gql`
         {
@@ -17,14 +19,29 @@ export default function GraphHome(){
         }
     `;
 
-    let result = useQuery(query);
-    console.log(result);
+    let {data, loading, error} = useQuery(query);
+
+    useEffect(() => {
+        if(data && !loading && !error){
+            setChars([...data.characters.results]);
+        }
+    }, [data])
+
+    const nextCharacter = () => {
+        chars.shift();
+        setChars([...chars]);
+    };
+
+    if(loading) return <h2>Cargando...</h2>
 
     return (
         <Card 
-            // leftClick={nextCharacter}  
+            leftClick={nextCharacter}  
             // rightClick={addFav}  
-            // {...char}
+            {...chars[0]}
         />
     );
-}
+};
+
+
+export default GraphHome;
