@@ -1,21 +1,35 @@
-import React from 'react'
-import styles from './login.module.css'
+import React from 'react';
+import styles from './login.module.css';
+import { connect } from 'react-redux';
+import { doGoogleLoginAction, logOutAction } from '../../redux/userDuck';
 
-export default function LoginPage() {
+
+function LoginPage ({ logOutAction, loggedIn, fetching, doGoogleLoginAction }) {
+
+    function doLogin () {
+        doGoogleLoginAction();
+    }
+
+    function logOut () {
+        logOutAction();
+    }
+
+
+    if(fetching) return <h2>Cargando...</h2>;
+
     return (
         <div className={styles.container}>
-            <h1>
-                Inicia Sesión con Google
-            </h1>
-            <h1>
-                Cierra tu sesión
-            </h1>
-            <button>
-                Iniciar
-            </button>
-            <button>
-                Cerrar Sesión
-            </button>
+            {loggedIn ? <h1>Cierra tu sesión </h1> : <h1>Inicia Sesión con Google</h1>}
+            {loggedIn ?  <button onClick={logOut}>Cerrar Sesión</button> : <button onClick={doLogin}>Iniciar</button>}
         </div>
     )
 }
+
+function mapStateToProps ({ user: { fetching, loggedIn } }) {
+    return {
+        fetching,
+        loggedIn
+    }
+};
+
+export default connect( mapStateToProps, {doGoogleLoginAction, logOutAction} )(LoginPage)

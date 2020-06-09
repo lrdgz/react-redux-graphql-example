@@ -1,7 +1,8 @@
 import {createStore, combineReducers, compose, applyMiddleware} from 'redux';
-import userReducer from './userDuck';
+import userReducer, { restoreSessionAction } from './userDuck';
 import charsReducer, { getCharactersAction } from './charsDuck';
 import thunk from 'redux-thunk';
+
 
 let rootReducer = combineReducers({
     user: userReducer,
@@ -18,6 +19,9 @@ export default function generateStore(){
 
     //Hacemos esto para que desde que la app cargue, haga la llamada ajax
     getCharactersAction()(store.dispatch, store.getState);
+
+    //Verificamos si existe usuario validado en el localstorage
+    restoreSessionAction()(store.dispatch);
 
     return store;
 }
